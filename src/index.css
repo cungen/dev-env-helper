@@ -1,28 +1,7 @@
 @import "tailwindcss";
-@import "tw-animate-css";
-
-@custom-variant dark (&:is(.dark *));
 
 @theme {
   --font-family-sans: Inter, Avenir, Helvetica, Arial, sans-serif;
-  --color-neutral-50: #f6f6f6;
-  --color-neutral-900: #2f2f2f;
-  --color-neutral-950: #0f0f0f;
-  --color-primary-400: #646cff;
-  --color-primary-500: #535bf2;
-  --color-primary-600: #396cd8;
-  --color-accent-400: #24c8db;
-  --color-accent-500: #747bff;
-  --color-accent-600: #61dafb;
-}
-
-@utility dark-mode {
-  @media (prefers-color-scheme: dark) {
-    @slot;
-  }
-}
-
-@theme inline {
   --radius-sm: calc(var(--radius) - 4px);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
@@ -30,6 +9,8 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Base colors */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -53,6 +34,8 @@
   --color-chart-3: var(--chart-3);
   --color-chart-4: var(--chart-4);
   --color-chart-5: var(--chart-5);
+
+  /* Sidebar colors */
   --color-sidebar: var(--sidebar);
   --color-sidebar-foreground: var(--sidebar-foreground);
   --color-sidebar-primary: var(--sidebar-primary);
@@ -65,6 +48,8 @@
 
 :root {
   --radius: 0.625rem;
+
+  /* Light theme colors */
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
   --card: oklch(1 0 0);
@@ -88,6 +73,8 @@
   --chart-3: oklch(0.398 0.07 227.392);
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
+
+  /* Sidebar - light theme */
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -99,6 +86,7 @@
 }
 
 .dark {
+  /* Dark theme colors */
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);
@@ -122,6 +110,8 @@
   --chart-3: oklch(0.769 0.188 70.08);
   --chart-4: oklch(0.627 0.265 303.9);
   --chart-5: oklch(0.645 0.246 16.439);
+
+  /* Sidebar - dark theme */
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -134,9 +124,12 @@
 
 @layer base {
   * {
-    @apply border-border outline-ring/50;
+    border-color: var(--color-border);
+    outline-color: oklch(from var(--color-ring) l c h / 50%);
   }
   body {
-    @apply bg-background text-foreground;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    font-family: var(--font-family-sans), system-ui, sans-serif;
   }
 }
