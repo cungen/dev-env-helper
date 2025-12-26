@@ -1,8 +1,5 @@
-# cli-installation Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-cli-env-manager. Update Purpose after archive.
-## Requirements
 ### Requirement: One-Click CLI Installation
 The system SHALL allow users to install CLI tools directly from the application interface with real-time progress feedback.
 
@@ -149,60 +146,7 @@ The system SHALL download DMG files and automatically open them for user install
 - **AND** shows an error if server returns non-200 status
 - **AND** logs the error for debugging in the dialog output
 
-### Requirement: Installation Method Configuration
-The system SHALL support installation methods in CLI tool templates.
-
-#### Scenario: Built-in tools include installation methods
-- **WHEN** viewing a built-in CLI tool template (node, python, uv, n)
-- **THEN** the template includes installation methods (brew cask name or DMG URL)
-- **AND** the template includes dependency declarations where applicable
-- **AND** the install button is available when the tool is not installed
-- **AND** the installation method is used when user clicks install
-
-#### Scenario: Custom tools with installation methods
-- **WHEN** a user creates a custom CLI tool template
-- **THEN** the user can optionally specify installation methods
-- **AND** user can provide brew cask name for brew installation
-- **AND** user can provide DMG URL for GUI app installation
-- **AND** user can provide dependency declarations (list of tool IDs that must be installed first)
-- **AND** user can provide multiple installation methods with preference order
-
-#### Scenario: Tools without installation methods
-- **WHEN** a tool template has no installation methods defined
-- **THEN** the system shows "Manual Installation Required" message
-- **AND** displays a link to the tool's official documentation
-- **AND** does not show an install button
-
-#### Scenario: Installation method validation
-- **WHEN** saving a template with installation methods
-- **THEN** the system validates brew cask names (alphanumeric, hyphens)
-- **THEN** the system validates DMG URLs (must be HTTPS, end in .dmg)
-- **AND** shows validation errors for invalid methods
-- **AND** prevents saving until validation passes
-
-### Requirement: Post-Installation Detection
-The system SHALL automatically detect tools after successful installation.
-
-#### Scenario: Auto-refresh after brew install
-- **WHEN** a brew installation completes successfully
-- **THEN** the system automatically re-runs CLI tool detection
-- **AND** updates the tool's status from "Not Installed" to "Installed"
-- **AND** displays the detected version
-- **AND** shows a success notification
-
-#### Scenario: Auto-refresh after DMG install prompt
-- **WHEN** a DMG is opened for installation
-- **THEN** the system shows a "Refresh" button to verify installation
-- **AND** the system prompts user to click Refresh after completing manual install
-- **AND** when user clicks Refresh, the system re-runs detection
-- **AND** updates the tool's status if the user completed the installation
-
-#### Scenario: Installation completed but tool not found
-- **WHEN** an installation completes but the tool is still not detected in PATH
-- **THEN** the system shows a warning message
-- **AND** suggests the user may need to restart their terminal
-- **AND** offers to open PATH documentation
-- **AND** allows manual PATH configuration
+## ADDED Requirements
 
 ### Requirement: Installation Progress Dialog
 The system SHALL display a modal dialog with real-time installation progress and log output.

@@ -2,6 +2,7 @@ use crate::types::{CliToolDetection, ConfigFileStatus, ConfigFileLocation};
 use std::process::Command;
 use std::fs;
 use std::env;
+use rayon::prelude::*;
 
 /// Check if an executable exists in PATH
 fn which(executable: &str) -> Option<String> {
@@ -55,7 +56,7 @@ fn check_config_file(config: &ConfigFileLocation) -> ConfigFileStatus {
 }
 
 /// Expand shell variables in path (e.g., ~, $HOME)
-fn expand_path(path: &str) -> String {
+pub fn expand_path(path: &str) -> String {
     let mut expanded = path.to_string();
 
     // Expand ~
@@ -75,36 +76,35 @@ fn expand_path(path: &str) -> String {
     expanded
 }
 
-/// Detect all CLI tools based on templates
+/// Detect all CLI tools based on templates (parallelized for performance)
 pub fn detect_cli_tools(templates: &[crate::types::CliToolTemplate]) -> Vec<CliToolDetection> {
-    let mut results = Vec::new();
+    templates
+        .par_iter()
+        .map(|template| {
+            let executable_path = which(&template.executable);
+            let installed = executable_path.is_some();
 
-    for template in templates {
-        let executable_path = which(&template.executable);
-        let installed = executable_path.is_some();
+            let version = if installed {
+                get_version(&template.executable, &template.version_command)
+            } else {
+                None
+            };
 
-        let version = if installed {
-            get_version(&template.executable, &template.version_command)
-        } else {
-            None
-        };
+            let config_files: Vec<ConfigFileStatus> = template.config_files
+                .iter()
+                .map(check_config_file)
+                .collect();
 
-        let config_files: Vec<ConfigFileStatus> = template.config_files
-            .iter()
-            .map(check_config_file)
-            .collect();
-
-        results.push(CliToolDetection {
-            template_id: template.id.clone(),
-            installed,
-            version,
-            executable_path,
-            config_files,
-            detected_at: chrono::Utc::now().to_rfc3339(),
-        });
-    }
-
-    results
+            CliToolDetection {
+                template_id: template.id.clone(),
+                installed,
+                version,
+                executable_path,
+                config_files,
+                detected_at: chrono::Utc::now().to_rfc3339(),
+            }
+        })
+        .collect()
 }
 
 /// Get content of a config file

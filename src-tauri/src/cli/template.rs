@@ -27,6 +27,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: None,
+            category: Some("runtime".to_string()),
+            emoji: Some("🟢".to_string()),
         },
         CliToolTemplate {
             id: "python".to_string(),
@@ -52,6 +54,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: None,
+            category: Some("runtime".to_string()),
+            emoji: Some("🐍".to_string()),
         },
         CliToolTemplate {
             id: "uv".to_string(),
@@ -77,6 +81,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["python".to_string()]),
+            category: Some("package-manager".to_string()),
+            emoji: Some("📦".to_string()),
         },
         CliToolTemplate {
             id: "n".to_string(),
@@ -97,6 +103,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("package-manager".to_string()),
+            emoji: Some("📦".to_string()),
         },
         CliToolTemplate {
             id: "brew".to_string(),
@@ -129,6 +137,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: None,
+            category: Some("package-manager".to_string()),
+            emoji: Some("🍺".to_string()),
         },
         CliToolTemplate {
             id: "aerospace".to_string(),
@@ -154,6 +164,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["brew".to_string()]),
+            category: Some("window-manager".to_string()),
+            emoji: Some("🪟".to_string()),
         },
         CliToolTemplate {
             id: "fish".to_string(),
@@ -179,6 +191,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["brew".to_string()]),
+            category: Some("shell".to_string()),
+            emoji: Some("🐠".to_string()),
         },
         CliToolTemplate {
             id: "lazygit".to_string(),
@@ -204,6 +218,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["brew".to_string()]),
+            category: Some("git".to_string()),
+            emoji: Some("📝".to_string()),
         },
         CliToolTemplate {
             id: "nvim".to_string(),
@@ -229,6 +245,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["brew".to_string()]),
+            category: Some("editor".to_string()),
+            emoji: Some("✏️".to_string()),
         },
         CliToolTemplate {
             id: "tmux".to_string(),
@@ -254,6 +272,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["brew".to_string()]),
+            category: Some("terminal".to_string()),
+            emoji: Some("🖥️".to_string()),
         },
         CliToolTemplate {
             id: "ccusage".to_string(),
@@ -276,6 +296,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "codex".to_string(),
@@ -298,6 +320,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "claude-code".to_string(),
@@ -320,6 +344,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "wezterm".to_string(),
@@ -345,6 +371,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["brew".to_string()]),
+            category: Some("terminal".to_string()),
+            emoji: Some("🖥️".to_string()),
         },
         CliToolTemplate {
             id: "claude".to_string(),
@@ -367,6 +395,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: None,
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "gemini".to_string(),
@@ -389,6 +419,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "openspec".to_string(),
@@ -411,6 +443,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "inshellisense".to_string(),
@@ -433,6 +467,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
         CliToolTemplate {
             id: "tree-sitter".to_string(),
@@ -455,6 +491,8 @@ pub fn get_builtin_templates() -> Vec<CliToolTemplate> {
                 },
             ]),
             dependencies: Some(vec!["node".to_string()]),
+            category: Some("utility".to_string()),
+            emoji: Some("🔧".to_string()),
         },
     ]
 }

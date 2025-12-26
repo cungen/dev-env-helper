@@ -1,8 +1,5 @@
-# cli-management Specification
+## MODIFIED Requirements
 
-## Purpose
-TBD - created by archiving change add-cli-env-manager. Update Purpose after archive.
-## Requirements
 ### Requirement: CLI Tool Detection
 The system SHALL automatically detect installed CLI tools and display their status using parallel detection for optimal performance.
 
@@ -149,6 +146,8 @@ The system SHALL ship with pre-configured templates for common development CLI t
 - **THEN** the system uses the custom template in place of the built-in
 - **AND** indicates the tool is customized in the UI
 - **AND** the custom template can override category and emoji
+
+## ADDED Requirements
 
 ### Requirement: Shared Category Filter Component
 The system SHALL provide a reusable category filter component used by both CLI tools and software recommendations.

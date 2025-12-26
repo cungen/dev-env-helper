@@ -43,6 +43,25 @@ pub fn validate_editor_path(path: &str) -> Result<(), String> {
         return Err(format!("Editor path does not exist: {}", path));
     }
 
+    // On macOS, .app bundles are directories, which is valid
+    #[cfg(target_os = "macos")]
+    {
+        if path_buf.is_dir() {
+            // Check if it's a .app bundle
+            if path.ends_with(".app") {
+                // Verify it has the expected bundle structure
+                let contents_path = path_buf.join("Contents");
+                if contents_path.exists() && contents_path.is_dir() {
+                    return Ok(());
+                } else {
+                    return Err(format!("Editor path appears to be an .app bundle but is missing Contents directory: {}", path));
+                }
+            } else {
+                return Err(format!("Editor path is a directory but not a valid .app bundle: {}", path));
+            }
+        }
+    }
+
     // Check path is a file (not directory)
     if !path_buf.is_file() {
         return Err(format!("Editor path is not a file: {}", path));

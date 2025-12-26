@@ -294,22 +294,39 @@ fn get_settings() -> Result<types::AppSettings, String> {
 
 #[tauri::command]
 fn save_settings(settings: types::AppSettings) -> Result<(), String> {
-    // Validate settings before saving
-    if let Some(ref download_path) = settings.download_path {
+    // Normalize empty strings to None
+    let mut normalized_settings = settings;
+
+    // Normalize download_path: empty string -> None
+    if let Some(ref path) = normalized_settings.download_path {
+        if path.is_empty() {
+            normalized_settings.download_path = None;
+        }
+    }
+
+    // Normalize default_editor: empty string -> None
+    if let Some(ref editor) = normalized_settings.default_editor {
+        if editor.is_empty() {
+            normalized_settings.default_editor = None;
+        }
+    }
+
+    // Validate settings before saving (only validate non-empty values)
+    if let Some(ref download_path) = normalized_settings.download_path {
         settings::validation::validate_download_path(download_path)?;
     }
 
-    if let Some(ref editor_path) = settings.default_editor {
+    if let Some(ref editor_path) = normalized_settings.default_editor {
         settings::validation::validate_editor_path(editor_path)?;
     }
 
-    if let Some(ref proxy) = settings.proxy {
+    if let Some(ref proxy) = normalized_settings.proxy {
         if proxy.enabled {
             settings::validation::validate_proxy_url(&proxy.url, &proxy.proxy_type)?;
         }
     }
 
-    settings::storage::save_settings(&settings)
+    settings::storage::save_settings(&normalized_settings)
 }
 
 #[tauri::command]
@@ -322,7 +339,9 @@ fn reset_settings() -> Result<types::AppSettings, String> {
 #[tauri::command]
 fn open_file_with_editor(file_path: String) -> Result<(), String> {
     let settings = settings::storage::load_settings()?;
-    settings::editor::open_file_with_editor(&file_path, settings.default_editor.as_deref())
+    // Expand path (handle ~ and $HOME)
+    let expanded_path = cli::detection::expand_path(&file_path);
+    settings::editor::open_file_with_editor(&expanded_path, settings.default_editor.as_deref())
 }
 
 #[tauri::command]

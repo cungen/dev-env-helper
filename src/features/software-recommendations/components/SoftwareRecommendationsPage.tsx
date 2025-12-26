@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useSoftwareRecommendations } from "../hooks/useSoftwareRecommendations";
 import { useSoftwareInstallationStatus } from "../hooks/useSoftwareInstallationStatus";
-import { CategoryFilter } from "./CategoryFilter";
+import { CategoryFilter, type Category } from "@/components/CategoryFilter";
 import { SoftwareCard } from "./SoftwareCard";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -103,7 +103,11 @@ export function SoftwareRecommendationsPage() {
       </div>
 
       <CategoryFilter
-        categories={config.categories}
+        categories={config.categories.map((c) => ({
+          id: c.id,
+          name: c.name,
+          emoji: c.emoji,
+        }))}
         selectedCategory={selectedCategory}
         onSelectCategory={setSelectedCategory}
         className="mb-6 flex-shrink-0"

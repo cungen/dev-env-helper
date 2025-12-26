@@ -1,108 +1,73 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Terminal } from "lucide-react";
-import { InstallButton } from "@/features/cli-installation/components/InstallButton";
-import { InstallMethodBadge } from "@/features/cli-installation/components/InstallMethodBadge";
-import { StatusBadge } from "./StatusBadge";
-import { CollapsibleConfigFiles } from "./CollapsibleConfigFiles";
-
-// Template data for dependencies and install methods
-const TOOL_DATA: Record<string, { dependencies?: string[]; installMethods?: any[] }> = {
-  node: { dependencies: [], installMethods: [{ type: "brew", caskName: "node" }] },
-  python: { dependencies: [], installMethods: [{ type: "brew", caskName: "python" }] },
-  uv: { dependencies: ["python"], installMethods: [{ type: "brew", caskName: "uv" }] },
-  n: { dependencies: ["node"], installMethods: [{ type: "brew", caskName: "n" }] },
-};
+import { CheckCircle2 } from "lucide-react";
+import { cn } from "@/lib/utils";
+import type { CliToolDetection } from "../types/cli-tool";
+import type { CliToolTemplate } from "../types/cli-tool";
 
 export interface CliToolCardProps {
-  tool: {
-    templateId: string;
-    installed: boolean;
-    version?: string;
-    executablePath?: string;
-    configFiles: any[];
-    detectedAt: string;
-  };
-  onViewConfig: (path: string) => void;
-  onInstall: (toolId: string) => void;
-  isInstalling: boolean;
+  tool: CliToolDetection;
+  template?: CliToolTemplate;
+  onClick: () => void;
 }
 
-export function CliToolCard({ tool, onViewConfig, onInstall, isInstalling }: CliToolCardProps) {
-  const getToolName = (id: string) => {
-    const names: Record<string, string> = {
-      node: "Node.js",
-      python: "Python",
-      uv: "uv",
-      n: "n",
-    };
-    return names[id] || id;
+const getToolName = (id: string, template?: CliToolTemplate) => {
+  if (template?.name) return template.name;
+  const names: Record<string, string> = {
+    node: "Node.js",
+    python: "Python",
+    uv: "uv",
+    n: "n",
   };
+  return names[id] || id;
+};
 
-  const toolData = TOOL_DATA[tool.templateId] || { dependencies: [], installMethods: [] };
-  const dependencies = toolData.dependencies || [];
-  const installMethods = toolData.installMethods || [];
+const getToolEmoji = (id: string, template?: CliToolTemplate) => {
+  if (template?.emoji) return template.emoji;
+  return "⚙️"; // Default emoji
+};
+
+export function CliToolCard({ tool, template, onClick }: CliToolCardProps) {
+  const toolName = getToolName(tool.templateId, template);
+  const emoji = getToolEmoji(tool.templateId, template);
 
   return (
-    <Card className="p-3 gap-0">
-      {/* Main horizontal row - responsive layout */}
-      <div className="flex flex-wrap items-center gap-2 lg:gap-3">
-        {/* Left: Tool identity */}
-        <div className="flex items-center gap-2 min-w-0">
-          <Terminal className="h-4 w-4 text-muted-foreground flex-shrink-0" />
-          <span className="font-semibold truncate text-sm sm:text-base">{getToolName(tool.templateId)}</span>
-          {tool.installed && tool.version && (
-            <span className="text-xs sm:text-sm text-muted-foreground flex-shrink-0">
-              v{tool.version}
-            </span>
-          )}
-          <Badge variant="outline" className="text-xs flex-shrink-0 hidden sm:inline-flex">
-            {tool.templateId}
-          </Badge>
+    <Card
+      className={cn(
+        "p-4 cursor-pointer hover:shadow-md transition-shadow",
+        tool.installed && "border-green-500/20 bg-green-500/5"
+      )}
+      onClick={onClick}
+    >
+      <div className="flex flex-col gap-3">
+        {/* Header: Emoji and Name */}
+        <div className="flex items-center gap-3">
+          <div className="text-3xl shrink-0">{emoji}</div>
+          <div className="flex-1 min-w-0">
+            <h3 className="font-semibold text-base truncate">{toolName}</h3>
+            {tool.installed && tool.version && (
+              <p className="text-xs text-muted-foreground">v{tool.version}</p>
+            )}
+          </div>
         </div>
 
-        {/* Spacer - only on large screens */}
-        <div className="hidden lg:flex flex-1" />
-
-        {/* Center: Dependencies */}
-        {dependencies.length > 0 && (
-          <>
-            <div className="flex items-center gap-1 flex-wrap">
-              {dependencies.map((dep) => (
-                <Badge key={dep} variant="secondary" className="text-xs">
-                  {dep}
-                </Badge>
-              ))}
-            </div>
-            <div className="hidden lg:flex flex-1" />
-          </>
-        )}
-
-        {/* Right: Actions */}
-        <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
-          {!tool.installed && installMethods.length > 0 && (
-            <InstallMethodBadge method={installMethods[0]} />
-          )}
-          <StatusBadge installed={tool.installed} />
-          {!tool.installed && installMethods.length > 0 && (
-            <InstallButton
-              installMethods={installMethods}
-              onInstall={() => onInstall(tool.templateId)}
-              isInstalling={isInstalling}
-            />
+        {/* Status Badge */}
+        <div className="flex items-center gap-2">
+          {tool.installed ? (
+            <Badge
+              variant="default"
+              className="text-xs bg-green-500/10 text-green-600 border-green-500/20 dark:bg-green-500/20 dark:text-green-400 dark:border-green-500/30"
+            >
+              <CheckCircle2 className="h-3 w-3 mr-1" />
+              Installed
+            </Badge>
+          ) : (
+            <Badge variant="secondary" className="text-xs">
+              Not Installed
+            </Badge>
           )}
         </div>
       </div>
-
-      {/* Collapsible config files */}
-      {tool.configFiles.length > 0 && (
-        <CollapsibleConfigFiles
-          configFiles={tool.configFiles}
-          onViewFile={onViewConfig}
-        />
-      )}
     </Card>
   );
 }
-
-

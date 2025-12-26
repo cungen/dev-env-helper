@@ -29,4 +29,5 @@ reqwest = { version = "0.12", features = ["json", "stream"] }
 regex = "1"
 futures-util = "0.3"
 scraper = "0.20"
+rayon = "1"
 

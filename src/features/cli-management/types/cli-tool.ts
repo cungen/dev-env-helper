@@ -13,6 +13,7 @@ export interface ConfigFileLocation {
   type?: "home" | "absolute";
   description?: string;
   exists?: boolean;
+  can_read?: boolean;
   fullPath?: string;
 }
 
@@ -25,6 +26,8 @@ export interface CliToolTemplate {
   configFiles: ConfigFileLocation[];
   installMethods?: InstallMethod[];
   dependencies?: string[];
+  category?: string;
+  emoji?: string;
 }
 
 export interface CliToolDetection {

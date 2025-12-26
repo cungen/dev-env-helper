@@ -143,6 +143,10 @@ export function useToolInstallation(options?: {
             if (scriptInstall.error) {
               return;
             }
+            // Script install completion is handled in scriptInstall.onSuccess
+            // Wait a bit for the state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            continue;
           } else if (brewMethod?.brewTap && brewMethod?.caskName) {
             // Brew tap cask
             await new Promise<void>((resolve, reject) => {
@@ -181,6 +185,10 @@ export function useToolInstallation(options?: {
             if (brewInstall.error) {
               return;
             }
+            // Brew install completion is handled in brewInstall.onSuccess
+            // Wait a bit for the state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            continue;
           } else if (brewMethod?.formulaName) {
             // Regular brew formula
             await new Promise<void>((resolve, reject) => {
@@ -197,6 +205,10 @@ export function useToolInstallation(options?: {
             if (dmgDownload.error) {
               return;
             }
+            // DMG download completion is handled in dmgDownload.onSuccess
+            // Wait a bit for the state to update
+            await new Promise(resolve => setTimeout(resolve, 100));
+            continue;
           } else {
             setState((prev) => ({
               ...prev,
@@ -251,6 +263,16 @@ export function useToolInstallation(options?: {
     scriptInstall.reset();
   }, [brewInstall, dmgDownload, scriptInstall]);
 
+  // Get current log output from active installation method
+  const currentLogOutput = useCallback(() => {
+    if (state.currentTool && state.isInstalling) {
+      if (brewInstall.isInstalling) return brewInstall.output;
+      if (dmgDownload.isDownloading) return dmgDownload.output;
+      if (scriptInstall.isInstalling) return scriptInstall.output;
+    }
+    return [];
+  }, [state.currentTool, state.isInstalling, brewInstall, dmgDownload, scriptInstall]);
+
   return {
     ...state,
     installTools,
@@ -258,5 +280,6 @@ export function useToolInstallation(options?: {
     brewState: brewInstall,
     dmgState: dmgDownload,
     scriptState: scriptInstall,
+    logOutput: currentLogOutput(),
   };
 }
