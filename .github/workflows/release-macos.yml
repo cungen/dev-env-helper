@@ -14,6 +14,8 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0  # Fetch all history and tags for release notes
 
       - name: Setup Node.js
         uses: actions/setup-node@v4
@@ -41,6 +43,7 @@ jobs:
       - name: Generate release notes
         id: release_notes
         run: |
+          git fetch --tags
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
           if [ -z "$PREV_TAG" ]; then
             COMMITS=$(git log --pretty=format:"- %s" HEAD)
@@ -48,13 +51,13 @@ jobs:
             COMMITS=$(git log --pretty=format:"- %s" ${PREV_TAG}..HEAD)
           fi
 
-          # Format commits by type
-          FEAT=$(echo "$COMMITS" | grep -E "^\s*- \[feat\]|^\s*- feat:" || true)
-          FIX=$(echo "$COMMITS" | grep -E "^\s*- \[fix\]|^\s*- fix:" || true)
-          REFACTOR=$(echo "$COMMITS" | grep -E "^\s*- \[refactor\]|^\s*- refactor:" || true)
-          CHORE=$(echo "$COMMITS" | grep -E "^\s*- \[chore\]|^\s*- chore:" || true)
-          DOCS=$(echo "$COMMITS" | grep -E "^\s*- \[docs\]|^\s*- docs:" || true)
-          OTHER=$(echo "$COMMITS" | grep -vE "^\s*- \[(feat|fix|refactor|chore|docs)\]|^\s*- (feat|fix|refactor|chore|docs):" || true)
+          # Format commits by type (without brackets)
+          FEAT=$(echo "$COMMITS" | grep -E "^\s*- feat:" || true)
+          FIX=$(echo "$COMMITS" | grep -E "^\s*- fix:" || true)
+          REFACTOR=$(echo "$COMMITS" | grep -E "^\s*- refactor:" || true)
+          CHORE=$(echo "$COMMITS" | grep -E "^\s*- chore:" || true)
+          DOCS=$(echo "$COMMITS" | grep -E "^\s*- docs:" || true)
+          OTHER=$(echo "$COMMITS" | grep -vE "^\s*- (feat|fix|refactor|chore|docs):" || true)
 
           NOTES="## What's Changed\n\n"
           [ -n "$FEAT" ] && NOTES="${NOTES}### ✨ Features\n${FEAT}\n\n"
@@ -74,10 +77,10 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
           projectPath: .
-          tagName: ${{ github.ref_name }}
-          releaseName: 'DevEnvHelper v${{ github.ref_name }}'
+          tagName: ${{ github.event.release.tag_name || github.ref_name }}
+          releaseName: 'DevEnvHelper v${{ github.event.release.tag_name || github.ref_name }}'
           releaseBody: ${{ steps.release_notes.outputs.notes }}
-          releaseDraft: true
-          prerelease: false
+          releaseDraft: false
+          prerelease: ${{ github.event.release.prerelease || false }}
           args: '--target universal-apple-darwin'
 
