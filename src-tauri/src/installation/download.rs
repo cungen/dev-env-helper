@@ -56,10 +56,10 @@ pub fn download_and_open_dmg<F>(
 where
     F: Fn(u64, u64),
 {
-    // Use the system temp directory for downloads
-    let temp_dir = std::env::temp_dir();
+    // Use configured download directory or system temp directory
+    let download_dir = get_download_dir().unwrap_or_else(|_| std::env::temp_dir());
     let filename = _url.split('/').last().unwrap_or("download.dmg");
-    let destination = temp_dir.join(filename);
+    let destination = download_dir.join(filename);
 
     // Download the file
     let downloaded_path = download_file(_url, destination.clone(), _progress)?;
@@ -78,8 +78,22 @@ where
 }
 
 /// Get the download directory for the platform
-#[allow(dead_code)]
+/// Checks settings first, then falls back to system default
 pub fn get_download_dir() -> Result<PathBuf, String> {
+    // Check settings first
+    if let Ok(settings) = crate::settings::storage::load_settings() {
+        if let Some(ref download_path) = settings.download_path {
+            let path = PathBuf::from(download_path);
+            // Create directory if it doesn't exist
+            if !path.exists() {
+                std::fs::create_dir_all(&path)
+                    .map_err(|e| format!("Failed to create download directory: {}", e))?;
+            }
+            return Ok(path);
+        }
+    }
+
+    // Fall back to system default
     #[cfg(target_os = "macos")]
     {
         let mut path = dirs::home_dir()
@@ -165,9 +179,23 @@ where
 
     let destination = download_dir.join(filename);
 
-    // Create HTTP client
-    let client = reqwest::Client::builder()
-        .user_agent("dev-env-helper/1.0")
+    // Create HTTP client with proxy if configured
+    let mut client_builder = reqwest::Client::builder()
+        .user_agent("dev-env-helper/1.0");
+
+    // Apply proxy settings if enabled
+    if let Ok(settings) = crate::settings::storage::load_settings() {
+        if let Some(ref proxy) = settings.proxy {
+            if proxy.enabled {
+                client_builder = crate::settings::proxy::configure_client_with_proxy(
+                    client_builder,
+                    proxy,
+                )?;
+            }
+        }
+    }
+
+    let client = client_builder
         .build()
         .map_err(|e| format!("Failed to create HTTP client: {}", e))?;
 

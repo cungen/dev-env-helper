@@ -143,6 +143,31 @@ export function validateEnvironmentSchema(data: unknown): ValidationResult {
     errors.push("Invalid customTemplates: expected an array");
   }
 
+  // Validate software array (optional)
+  if (obj.software !== undefined) {
+    if (!Array.isArray(obj.software)) {
+      errors.push("Invalid software: expected an array");
+    } else {
+      // Validate each software item
+      obj.software.forEach((software: unknown, index: number) => {
+        if (!software || typeof software !== "object") {
+          errors.push(`Software at index ${index} is invalid`);
+          return;
+        }
+
+        const softwareObj = software as Record<string, unknown>;
+
+        if (!softwareObj.id || typeof softwareObj.id !== "string") {
+          errors.push(`Software at index ${index} missing id`);
+        }
+
+        if (!softwareObj.name || typeof softwareObj.name !== "string") {
+          errors.push(`Software at index ${index} missing name`);
+        }
+      });
+    }
+  }
+
   // Validate hostname (optional)
   if (obj.hostname && typeof obj.hostname !== "string") {
     warnings.push("Invalid hostname format");

@@ -5,12 +5,20 @@ import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Download, Upload, CheckCircle2 } from "lucide-react";
 import { useCliDetection } from "@/features/cli-management/hooks/useCliDetection";
+import { useSoftwareRecommendations } from "@/features/software-recommendations/hooks/useSoftwareRecommendations";
+import { useSoftwareInstallationStatus } from "@/features/software-recommendations/hooks/useSoftwareInstallationStatus";
 import { useEnvironmentImport } from "../hooks/useEnvironmentImport";
+import { useRestoreState } from "@/features/restore-page/hooks/useRestoreState";
+import { useNavigation } from "@/hooks/useNavigation";
 import { ImportPreview } from "./ImportPreview";
 import { toast } from "sonner";
 
 export function EnvironmentPage() {
   const { tools, refresh } = useCliDetection();
+  const { config: softwareConfig } = useSoftwareRecommendations();
+  const { status: softwareStatus } = useSoftwareInstallationStatus();
+  const { setRestoreData } = useRestoreState();
+  const { setActiveTab } = useNavigation();
   const [showImportPreview, setShowImportPreview] = useState(false);
 
   const installedCount = tools.filter((t) => t.installed).length;
@@ -20,6 +28,10 @@ export function EnvironmentPage() {
 
   const handleExport = async () => {
     try {
+      // Get installed software
+      const installedSoftware =
+        softwareConfig?.software.filter((s) => softwareStatus[s.id] === true) || [];
+
       // Create export data with schema version
       const exportData = {
         schemaVersion: "1.0",
@@ -27,6 +39,7 @@ export function EnvironmentPage() {
         hostname: window.location.hostname,
         tools: tools,
         customTemplates: [],
+        software: installedSoftware.length > 0 ? installedSoftware : undefined,
       };
 
       // Convert to JSON and trigger download
@@ -74,16 +87,34 @@ export function EnvironmentPage() {
   };
 
   const handleConfirmImport = async () => {
-    const result = await confirmImport();
+    if (!preview) return;
 
-    if (result.success) {
+    // Store restore data and navigate to restore page
+    try {
+      const restoreData = {
+        exportedAt: preview.exportedAt,
+        hostname: preview.hostname,
+        tools: preview.tools.map((t) => ({
+          templateId: t.templateId,
+          installed: t.installed,
+          version: t.version,
+          executablePath: t.executablePath,
+          configFiles: t.configFiles,
+          detectedAt: t.detectedAt,
+        })),
+        software: preview.software || [],
+        customTemplates: preview.customTemplates || [],
+      };
+
+      setRestoreData(restoreData);
+      setActiveTab("restore");
+
       toast.success("Environment imported successfully");
       setShowImportPreview(false);
-      // Refresh CLI detection to get updated state
       await refresh();
-    } else {
+    } catch (error) {
       toast.error("Failed to import environment", {
-        description: result.error,
+        description: error instanceof Error ? error.message : "Unknown error",
       });
     }
   };

@@ -2,10 +2,17 @@ import { invoke } from "@tauri-apps/api/core";
 import type {
   SoftwareRecommendationsConfig,
   GitHubReleaseInfo,
+  SoftwareRecommendation,
 } from "../types/software-recommendation";
 
 export async function getSoftwareRecommendations(): Promise<SoftwareRecommendationsConfig> {
   return await invoke("get_software_recommendations");
+}
+
+export async function detectInstalledSoftware(
+  software: SoftwareRecommendation[]
+): Promise<Array<[string, boolean]>> {
+  return await invoke("detect_installed_software", { software });
 }
 
 export async function getGitHubLatestRelease(

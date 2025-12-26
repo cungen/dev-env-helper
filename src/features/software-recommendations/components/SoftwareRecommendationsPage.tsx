@@ -1,19 +1,46 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useSoftwareRecommendations } from "../hooks/useSoftwareRecommendations";
+import { useSoftwareInstallationStatus } from "../hooks/useSoftwareInstallationStatus";
 import { CategoryFilter } from "./CategoryFilter";
 import { SoftwareCard } from "./SoftwareCard";
 import { Card } from "@/components/ui/card";
-import { AlertCircle, Loader2 } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { AlertCircle, Loader2, RefreshCw } from "lucide-react";
 
 export function SoftwareRecommendationsPage() {
   const { config, isLoading, error } = useSoftwareRecommendations();
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const {
+    isDetecting,
+    detectStatus,
+    refreshStatus,
+    updateSoftwareWithStatus,
+  } = useSoftwareInstallationStatus();
+
+  // Detect installation status when config loads (in background, non-blocking)
+  useEffect(() => {
+    if (config && config.software.length > 0) {
+      // Run detection in background without showing loading state
+      detectStatus(config.software, false).catch(() => {
+        // Error already handled in hook
+      });
+    }
+  }, [config, detectStatus]);
 
   const filteredSoftware = useMemo(() => {
     if (!config) return [];
-    if (selectedCategory === "all") return config.software;
-    return config.software.filter((s) => s.category === selectedCategory);
-  }, [config, selectedCategory]);
+    let software = config.software;
+    if (selectedCategory !== "all") {
+      software = software.filter((s) => s.category === selectedCategory);
+    }
+    return updateSoftwareWithStatus(software);
+  }, [config, selectedCategory, updateSoftwareWithStatus]);
+
+  const handleRefresh = async () => {
+    if (config && config.software.length > 0) {
+      await refreshStatus(config.software);
+    }
+  };
 
   if (isLoading) {
     return (
@@ -52,10 +79,27 @@ export function SoftwareRecommendationsPage() {
   return (
     <div className="flex flex-col h-full p-4">
       <div className="mb-6 flex-shrink-0">
-        <h1 className="text-3xl font-bold mb-2">Software Recommendations</h1>
-        <p className="text-muted-foreground">
-          Discover and install recommended development software
-        </p>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 className="text-3xl font-bold mb-2">Software Recommendations</h1>
+            <p className="text-muted-foreground">
+              Discover and install recommended development software
+            </p>
+          </div>
+          {config && config.software.length > 0 && (
+            <Button
+              onClick={handleRefresh}
+              disabled={isDetecting}
+              variant="outline"
+              size="sm"
+            >
+              <RefreshCw
+                className={`h-4 w-4 mr-2 ${isDetecting ? "animate-spin" : ""}`}
+              />
+              Refresh Status
+            </Button>
+          )}
+        </div>
       </div>
 
       <CategoryFilter
@@ -74,7 +118,11 @@ export function SoftwareRecommendationsPage() {
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 overflow-y-auto">
           {filteredSoftware.map((software) => (
-            <SoftwareCard key={software.id} software={software} />
+            <SoftwareCard
+              key={software.id}
+              software={software}
+              onInstallComplete={handleRefresh}
+            />
           ))}
         </div>
       )}

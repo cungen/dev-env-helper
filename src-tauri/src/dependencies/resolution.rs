@@ -219,20 +219,6 @@ fn build_dependency_tree_with_templates(
     })
 }
 
-/// Get reverse dependencies (tools that depend on the given tool)
-pub fn get_reverse_dependencies(tool_id: &str, templates: &[CliToolTemplate]) -> Vec<String> {
-    templates
-        .iter()
-        .filter(|t| {
-            t.dependencies
-                .as_ref()
-                .map(|deps| deps.contains(&tool_id.to_string()))
-                .unwrap_or(false)
-        })
-        .map(|t| t.id.clone())
-        .collect()
-}
-
 /// Get reverse dependencies with names (for display purposes)
 pub fn get_reverse_dependencies_with_names(
     tool_id: &str,

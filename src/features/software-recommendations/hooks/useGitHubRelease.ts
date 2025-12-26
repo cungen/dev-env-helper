@@ -19,11 +19,16 @@ export function useGitHubRelease(
     setIsLoading(true);
     setError(null);
 
+    console.log("[GitHub Release] Fetching:", { owner, repo, assetPattern });
+
     try {
       const data = await getGitHubLatestRelease(owner, repo, assetPattern);
+      console.log("[GitHub Release] Success:", data);
       setRelease(data);
     } catch (e) {
-      setError(e instanceof Error ? e.message : "Failed to fetch GitHub release");
+      const errorMsg = e instanceof Error ? e.message : "Failed to fetch GitHub release";
+      console.error("[GitHub Release] Error:", errorMsg, e);
+      setError(errorMsg);
     } finally {
       setIsLoading(false);
     }
@@ -40,4 +45,5 @@ export function useGitHubRelease(
     refetch: fetchRelease,
   };
 }
+
 

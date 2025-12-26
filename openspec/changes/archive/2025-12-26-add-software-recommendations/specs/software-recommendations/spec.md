@@ -95,17 +95,17 @@ The system SHALL detect and download the latest release from GitHub repositories
 - **AND** extracts the release version (tag name)
 - **AND** finds the download asset matching the configured pattern
 - **AND** displays the version information on the software card
-- **AND** shows a "Download" button with the release version
+- **AND** shows a "Download" button with the release version (MODIFIED: Only for GitHub + Homebrew software, removed for GitHub-only)
 
 #### Scenario: Display GitHub release information
 - **WHEN** GitHub release data is successfully fetched
 - **THEN** the system displays the latest version tag (e.g., "v1.2.3")
 - **AND** shows the release name if available
-- **AND** displays a Download button that is enabled
+- **AND** displays a Download button that is enabled (MODIFIED: Only for GitHub + Homebrew software)
 - **AND** shows loading state while fetching release data
 
 #### Scenario: Download GitHub release asset
-- **WHEN** the user clicks the Download button for a GitHub release
+- **WHEN** the user clicks the Download button for a GitHub release (MODIFIED: Only exists for GitHub + Homebrew software)
 - **THEN** the system downloads the matching asset file
 - **AND** displays download progress (percentage, file size)
 - **AND** saves the file to the Downloads folder
@@ -134,21 +134,51 @@ The system SHALL detect and download the latest release from GitHub repositories
 - **AND** refreshes cache when user explicitly requests or cache is stale
 - **AND** shows cached data immediately while fetching fresh data in background
 
+### Requirement: GitHub Release Page Link
+The system SHALL provide a clickable link to the GitHub releases page for software distributed via GitHub.
+
+#### Scenario: Display GitHub link in card header
+- **WHEN** a software recommendation has a GitHub install method configured
+- **THEN** the system displays a GitHub icon link in the card header next to the software name
+- **AND** the link opens the repository's releases page (https://github.com/{owner}/{repo}/releases)
+- **AND** the icon is visually distinct and recognizable as GitHub branding
+- **AND** hovering over the icon shows a tooltip "View on GitHub"
+
+#### Scenario: GitHub link for GitHub-only software
+- **WHEN** a software recommendation has ONLY a GitHub install method (no Homebrew)
+- **THEN** the system displays the GitHub icon link in the card header
+- **AND** does NOT display a Download button in the card footer
+- **AND** displays "Manual download required" or similar message in footer area
+- **AND** the GitHub link is the primary call-to-action for this software
+
+#### Scenario: GitHub link for multi-method software
+- **WHEN** a software recommendation has BOTH Homebrew and GitHub install methods
+- **THEN** the system does NOT display the GitHub icon link (prioritizes Homebrew installation)
+- **AND** displays only the Install button for Homebrew
+- **AND** does NOT display the Download button for GitHub
+
 ### Requirement: Multiple Installation Methods
 The system SHALL support software with multiple installation methods and allow users to choose.
 
-#### Scenario: Software with multiple install methods
+#### Scenario: Software with multiple install methods (MODIFIED)
 - **WHEN** a software recommendation has both Homebrew and GitHub install methods
-- **THEN** the system displays both method indicators
-- **AND** shows both Install (for Homebrew) and Download (for GitHub) buttons
-- **AND** allows user to choose which method to use
-- **AND** clearly labels each button with its method
+- **THEN** the system displays only the Homebrew method indicator
+- **AND** shows only the Install button (prioritizes Homebrew)
+- **AND** does NOT display the GitHub link or Download button
+- **AND** Homebrew is the recommended installation method
 
-#### Scenario: Software with single install method
-- **WHEN** a software recommendation has only one install method
-- **THEN** the system displays only the relevant button (Install or Download)
-- **AND** shows the method indicator
-- **AND** button is clearly labeled with the method
+#### Scenario: Software with single Homebrew install method
+- **WHEN** a software recommendation has only a Homebrew install method
+- **THEN** the system displays the Install button
+- **AND** shows the Homebrew method indicator
+- **AND** button is clearly labeled "Install"
+
+#### Scenario: Software with single GitHub install method (MODIFIED)
+- **WHEN** a software recommendation has only a GitHub install method
+- **THEN** the system displays a GitHub icon link in the card header
+- **AND** does NOT display a Download button
+- **AND** displays "Manual download from GitHub" message in footer
+- **AND** the GitHub link is the primary call-to-action
 
 #### Scenario: Software without install methods
 - **WHEN** a software recommendation has no configured install methods
@@ -170,5 +200,52 @@ The system SHALL integrate the software recommendations page into the main appli
 - **WHEN** the user uses keyboard shortcuts for navigation
 - **THEN** the software recommendations page is accessible via keyboard shortcut
 - **AND** maintains consistent keyboard navigation patterns with other pages
+
+### Requirement: Installed Software Detection
+The system SHALL detect if recommended software is already installed on the user's system and display the installation status.
+
+#### Scenario: Detect installed Homebrew casks
+- **WHEN** the software recommendations page loads
+- **THEN** the system checks installed Homebrew casks using `brew list --cask`
+- **AND** for each software with a brew install method, checks if the cask name is in the installed list
+- **AND** marks the software as installed if the cask is found
+- **AND** displays an "Installed" badge on the software card
+- **AND** disables or hides the install button for installed software
+
+#### Scenario: Detect installed applications from GitHub releases
+- **WHEN** the software recommendations page loads
+- **AND** a software has a GitHub install method
+- **THEN** the system checks if the application exists in the `/Applications` folder (macOS)
+- **AND** matches the application name (case-insensitive) to determine if installed
+- **AND** marks the software as installed if the application is found
+- **AND** displays an "Installed" badge on the software card
+- **AND** disables or hides the download button for installed software
+
+#### Scenario: Display installed software status
+- **WHEN** a software recommendation is marked as installed
+- **THEN** the software card displays an "Installed" badge or status indicator
+- **AND** the install/download button is disabled or replaced with "Installed" text
+- **AND** the card may show a different visual style (e.g., muted colors) to indicate installed state
+- **AND** the installation method indicator (if shown) remains visible
+
+#### Scenario: Refresh installation status
+- **WHEN** the user clicks a refresh button or the page is reloaded
+- **THEN** the system re-runs installation detection
+- **AND** updates the UI with current installation status
+- **AND** shows a loading indicator during detection
+- **AND** automatically updates status after successful installation via the app
+
+#### Scenario: Detection handles errors gracefully
+- **WHEN** installation detection encounters an error (brew not available, permission denied, etc.)
+- **THEN** the system displays software as "Unknown" status
+- **AND** shows install buttons normally (allows user to attempt installation)
+- **AND** continues detection for remaining software
+- **AND** logs errors for debugging without blocking the UI
+
+#### Scenario: Software with multiple install methods
+- **WHEN** a software has both Homebrew and GitHub install methods
+- **THEN** the system checks both detection methods
+- **AND** marks software as installed if either method indicates installation
+- **AND** shows appropriate status based on which method detected the installation
 
 

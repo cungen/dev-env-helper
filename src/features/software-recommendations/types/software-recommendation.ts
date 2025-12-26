@@ -5,11 +5,12 @@ export interface SoftwareCategory {
 }
 
 export interface SoftwareInstallMethod {
-  type: "brew" | "github";
+  type: "brew" | "github" | "website";
   cask?: string;
   owner?: string;
   repo?: string;
   assetPattern?: string;
+  url?: string;
 }
 
 export interface SoftwareRecommendation {
@@ -19,6 +20,7 @@ export interface SoftwareRecommendation {
   category: string;
   emoji: string;
   installMethods: SoftwareInstallMethod[];
+  installed?: boolean;
 }
 
 export interface SoftwareRecommendationsConfig {

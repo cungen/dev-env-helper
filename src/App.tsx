@@ -1,13 +1,21 @@
 import { Sidebar } from "@/components/Sidebar";
 import { useNavigation } from "@/hooks/useNavigation";
+import { HomePage } from "@/features/home-page/components/HomePage";
 import { CliToolsPage } from "@/features/cli-management/components/CliToolsPage";
-import { EnvironmentPage } from "@/features/environment-export/components/EnvironmentPage";
 import { SoftwareRecommendationsPage } from "@/features/software-recommendations/components/SoftwareRecommendationsPage";
+import { RestorePage } from "@/features/restore-page/components/RestorePage";
+import { SettingsPage } from "@/features/settings/components/SettingsPage";
 import { InstallationProvider } from "@/features/cli-installation/context/InstallationContext";
 import type { FeatureTab } from "@/types/navigation";
 import { Toaster } from "@/components/ui/sonner";
 
 const featureTabs: FeatureTab[] = [
+  {
+    id: "home",
+    label: "Home",
+    icon: "Search",
+    component: () => <HomePage />,
+  },
   {
     id: "cli-tools",
     label: "CLI Tools",
@@ -15,16 +23,22 @@ const featureTabs: FeatureTab[] = [
     component: () => <CliToolsPage />,
   },
   {
-    id: "environment",
-    label: "Environment",
-    icon: "Download",
-    component: () => <EnvironmentPage />,
-  },
-  {
     id: "software",
     label: "Software",
     icon: "Grid3x3",
     component: () => <SoftwareRecommendationsPage />,
+  },
+  {
+    id: "restore",
+    label: "Restore",
+    icon: "Download",
+    component: () => <RestorePage />,
+  },
+  {
+    id: "settings",
+    label: "Settings",
+    icon: "Settings",
+    component: () => <SettingsPage />,
   },
 ];
 

@@ -9,20 +9,9 @@ The system SHALL provide a vertical sidebar for navigating between application f
 #### Scenario: Sidebar displays available features
 - **WHEN** the application launches
 - **THEN** the system displays a vertical sidebar on the left side of the window
-- **AND** shows a tab/button for each available feature (CLI Tools, Environment, and future features)
+- **AND** shows a tab/button for each available feature (CLI Tools, Environment, Software Recommendations, and future features)
 - **AND** each tab displays an icon and label
 - **AND** the currently active tab is visually highlighted
-
-#### Scenario: Switch between features
-- **WHEN** the user clicks on a sidebar tab
-- **THEN** the main content area updates to show the selected feature
-- **AND** the active tab indicator moves to the newly selected tab
-- **AND** the feature's content is displayed in the main panel
-
-#### Scenario: Keyboard navigation
-- **WHEN** the user uses keyboard shortcuts (if implemented)
-- **THEN** the system allows switching between features without mouse interaction
-- **AND** maintains consistent keyboard patterns (e.g., Ctrl/Cmd + number keys)
 
 ### Requirement: Collapsible Sidebar
 The system SHALL allow the sidebar to collapse to expand content area.

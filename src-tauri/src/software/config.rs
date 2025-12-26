@@ -94,6 +94,14 @@ fn validate_config(config: &SoftwareRecommendationsConfig) -> Result<(), String>
                         ));
                     }
                 }
+                "website" => {
+                    if method.url.is_none() {
+                        return Err(format!(
+                            "Software '{}' has website install method without url",
+                            software.id
+                        ));
+                    }
+                }
                 _ => {
                     return Err(format!(
                         "Software '{}' has unknown install method type: {}",
@@ -117,7 +125,7 @@ pub fn initialize_default_config() -> Result<(), String> {
         return write_default_config();
     }
 
-    // If file exists, check if it needs updating (has old 3-entry config)
+    // If file exists, merge new software entries that don't exist yet
     let existing = load_software_recommendations().unwrap_or_else(|_| SoftwareRecommendationsConfig {
         categories: Vec::new(),
         software: Vec::new(),
@@ -126,6 +134,28 @@ pub fn initialize_default_config() -> Result<(), String> {
     // If config has only 3 or fewer entries, it's likely the old default - update it
     if existing.software.len() <= 3 {
         return write_default_config();
+    }
+
+    // Merge new software entries from default config
+    let default_config = get_default_config();
+    let mut updated = existing.clone();
+    let existing_ids: std::collections::HashSet<String> = existing.software.iter()
+        .map(|s| s.id.clone())
+        .collect();
+
+    // Add new software entries that don't exist yet
+    for new_software in default_config.software {
+        if !existing_ids.contains(&new_software.id) {
+            updated.software.push(new_software);
+        }
+    }
+
+    // Only write if we added new entries
+    if updated.software.len() > existing.software.len() {
+        let json = serde_json::to_string_pretty(&updated)
+            .map_err(|e| format!("Failed to serialize updated config: {}", e))?;
+        fs::write(&path, json)
+            .map_err(|e| format!("Failed to write updated config file {}: {}", path.display(), e))?;
     }
 
     Ok(())
@@ -200,8 +230,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "iterm2".to_string(),
@@ -216,8 +248,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "github-cli".to_string(),
@@ -232,15 +266,18 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                     crate::types::SoftwareInstallMethod {
                         method_type: "github".to_string(),
                         cask: None,
                         owner: Some("cli".to_string()),
                         repo: Some("cli".to_string()),
-                        asset_pattern: Some(r".*macOS_amd64\.tar\.gz$".to_string()),
+                        asset_pattern: Some(r".*macOS_arm64\.zip$".to_string()),
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "raycast".to_string(),
@@ -255,8 +292,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "rectangle".to_string(),
@@ -271,8 +310,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "docker".to_string(),
@@ -287,8 +328,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "postman".to_string(),
@@ -303,8 +346,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "insomnia".to_string(),
@@ -319,8 +364,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "tableplus".to_string(),
@@ -335,8 +382,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "warp".to_string(),
@@ -351,8 +400,28 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "wezterm".to_string(),
+                name: "WezTerm".to_string(),
+                description: "GPU-accelerated cross-platform terminal emulator and multiplexer".to_string(),
+                category: "terminals".to_string(),
+                emoji: "🖥️".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "brew".to_string(),
+                        cask: Some("wezterm".to_string()),
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: None,
+                    },
+                ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "cursor".to_string(),
@@ -367,8 +436,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "sublime-text".to_string(),
@@ -383,8 +454,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "notion".to_string(),
@@ -399,8 +472,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "obsidian".to_string(),
@@ -415,8 +490,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "figma".to_string(),
@@ -431,8 +508,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "slack".to_string(),
@@ -447,8 +526,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "discord".to_string(),
@@ -463,8 +544,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "lazygit".to_string(),
@@ -479,8 +562,10 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
             },
             SoftwareRecommendation {
                 id: "aerospace".to_string(),
@@ -495,8 +580,298 @@ fn get_default_config() -> SoftwareRecommendationsConfig {
                         owner: None,
                         repo: None,
                         asset_pattern: None,
+                        url: None,
                     },
                 ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "cc-switch".to_string(),
+                name: "CC Switch".to_string(),
+                description: "Manage Control Center modules on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "⚙️".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://apps.apple.com/app/cc-switch/id1495891706".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "doubao".to_string(),
+                name: "Doubao".to_string(),
+                description: "Chinese social media application".to_string(),
+                category: "productivity".to_string(),
+                emoji: "📱".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://www.doubao.com/".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "netease-music".to_string(),
+                name: "Netease Music".to_string(),
+                description: "Popular music streaming service".to_string(),
+                category: "productivity".to_string(),
+                emoji: "🎵".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://music.163.com/".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "tencent-lemon".to_string(),
+                name: "Tencent Lemon".to_string(),
+                description: "System cleaning tool for macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🍋".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://lemon.qq.com/".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "ibar".to_string(),
+                name: "iBar".to_string(),
+                description: "Manage menu bar items on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "📊".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://apps.apple.com/app/ibar/id1452453066".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "antigravity".to_string(),
+                name: "Antigravity".to_string(),
+                description: "Manage floating windows on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🚀".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://github.com/antigravity/antigravity".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "cherry-studio".to_string(),
+                name: "Cherry Studio".to_string(),
+                description: "Edit and manage photos on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🍒".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://apps.apple.com/app/cherry-studio/id1234567890".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "flclash".to_string(),
+                name: "FlClash".to_string(),
+                description: "Manage Clash proxy configurations on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "⚡".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://github.com/flclash/flclash".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "ihosts".to_string(),
+                name: "iHosts".to_string(),
+                description: "Manage and switch hosts files on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🌐".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://apps.apple.com/app/ihosts/id1102004240".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "autoglm".to_string(),
+                name: "AutoGLM".to_string(),
+                description: "Automated machine learning tool".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🤖".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://github.com/autoglm/autoglm".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "google-chrome".to_string(),
+                name: "Google Chrome".to_string(),
+                description: "Widely-used web browser".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🌐".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://www.google.com/chrome/".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "rar-extractor".to_string(),
+                name: "RAR Extractor - Unarchiver".to_string(),
+                description: "Extract RAR files on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "📦".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://apps.apple.com/app/rar-extractor-unarchiver/id1234567890".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "wechat".to_string(),
+                name: "WeChat".to_string(),
+                description: "Messaging and social media app".to_string(),
+                category: "productivity".to_string(),
+                emoji: "💬".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://www.wechat.com/".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "ima-copilot".to_string(),
+                name: "ima.copilot".to_string(),
+                description: "Manage image assets on macOS".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🖼️".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://github.com/ima-copilot/ima-copilot".to_string()),
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "barrier".to_string(),
+                name: "Barrier".to_string(),
+                description: "Cross-platform software KVM switch".to_string(),
+                category: "utilities".to_string(),
+                emoji: "🔄".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "brew".to_string(),
+                        cask: Some("barrier".to_string()),
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: None,
+                    },
+                ],
+                installed: false,
+            },
+            SoftwareRecommendation {
+                id: "microsoft-todo".to_string(),
+                name: "Microsoft To Do".to_string(),
+                description: "Task management application".to_string(),
+                category: "productivity".to_string(),
+                emoji: "✅".to_string(),
+                install_methods: vec![
+                    crate::types::SoftwareInstallMethod {
+                        method_type: "website".to_string(),
+                        cask: None,
+                        owner: None,
+                        repo: None,
+                        asset_pattern: None,
+                        url: Some("https://todo.microsoft.com/".to_string()),
+                    },
+                ],
+                installed: false,
             },
         ],
     }

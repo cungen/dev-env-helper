@@ -1,8 +1,11 @@
 export interface InstallMethod {
   type: "brew" | "dmg" | "script";
   caskName?: string;
+  formulaName?: string;
+  brewTap?: string;
   dmgUrl?: string;
   dmgInstallSteps?: string[];
+  scriptCommands?: string[];
 }
 
 export interface ConfigFileLocation {

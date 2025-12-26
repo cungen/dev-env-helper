@@ -16,6 +16,7 @@ The application currently focuses on managing known CLI tools. This change adds 
 - Automatic software updates
 - Installation of non-development software
 - Support for installation methods beyond Homebrew and GitHub releases (in initial version)
+- Detection of software installed via methods other than Homebrew or standard macOS Applications folder
 
 ## Decisions
 
@@ -174,6 +175,71 @@ The application currently focuses on managing known CLI tools. This change adds 
 **Alternatives considered**:
 - Frontend fetch: CORS issues, no caching, exposes API calls
 - GitHub CLI: Additional dependency, more complex
+
+### Decision 7: Installed Software Detection
+**What**: Detect if recommended software is already installed on the user's system and mark it in the UI.
+
+**Detection Methods**:
+- **Homebrew casks**: Use existing `get_installed_casks()` function to check if cask is installed
+- **GitHub releases**: Check if application exists in `/Applications` folder (macOS) by app name
+- **Detection timing**: Run detection when software recommendations page loads or on refresh
+
+**Rationale**:
+- Helps users see what they already have installed
+- Prevents redundant installation attempts
+- Provides visual feedback about system state
+- Reuses existing brew detection infrastructure
+
+**Implementation**:
+- Create `src-tauri/src/software/detection.rs` module
+- Add `detect_installed_software()` function that checks brew casks and Applications folder
+- For brew casks: Use existing `get_installed_casks()` and match cask names
+- For Applications folder: Check `/Applications/{AppName}.app` exists (case-insensitive matching)
+- Return installation status for each software recommendation
+- Update frontend types to include `installed: boolean` field
+- Display installed badge and disable install button for installed software
+- Cache detection results to avoid repeated checks during same session
+
+**Detection Strategy**:
+- **Brew casks**: Exact match on cask name from `brew list --cask`
+- **Applications folder**: Match app name (case-insensitive) against `/Applications/*.app` directories
+- **Multiple methods**: Software is considered installed if ANY method indicates installation
+- **Performance**: Batch detection for all software at once, cache results
+
+**Alternatives considered**:
+- Check via executable in PATH: Only works for CLI tools, not GUI apps
+- Check via system package manager: Platform-specific, complex
+- Manual user marking: Poor UX, requires user input
+- Check via LaunchServices database: More accurate but requires additional permissions
+
+### Decision 8: GitHub Link Display Behavior (MODIFIED Dec 26)
+**What**: For software distributed via GitHub, show a "View on GitHub" link in the card header, but hide download buttons and only show the link for GitHub-only software.
+
+**Display Logic**:
+- **GitHub-only software** (no Homebrew method):
+  - Show GitHub icon link in card header next to software name
+  - Link opens `https://github.com/{owner}/{repo}/releases`
+  - Do NOT show Download button in footer
+  - Show "Manual download from GitHub" message in footer
+- **Multi-method software** (both Homebrew and GitHub):
+  - Do NOT show GitHub link
+  - Show only Install button (prioritize Homebrew)
+  - Hide GitHub download functionality
+- **Homebrew-only software**:
+  - No GitHub link
+  - Show only Install button
+
+**Rationale**:
+- GitHub releases vary widely in installation methods (DMG, ZIP, PKG, manual copy, etc.)
+- Manual download from GitHub is often more complex than Homebrew installation
+- Homebrew is preferred when available (simpler, more consistent)
+- Link to GitHub releases page allows users to see all available options
+- Removes complexity of handling many different GitHub asset types
+
+**Alternatives considered**:
+- Show Download button for GitHub releases: Too complex due to varied asset types and installation methods
+- Always show GitHub link: Clutters UI for software where Homebrew is available
+- Show both Install and Download buttons: Confusing UX, Homebrew is generally preferred
 
 ## Risks / Trade-offs
 

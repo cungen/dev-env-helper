@@ -12,7 +12,7 @@ export function useNavigation(options?: UseNavigationOptions) {
     const stored = localStorage.getItem(STORAGE_KEY);
     return stored
       ? JSON.parse(stored)
-      : { activeTab: "cli-tools", isCollapsed: false };
+      : { activeTab: "home", isCollapsed: false };
   });
 
   useEffect(() => {
@@ -27,11 +27,21 @@ export function useNavigation(options?: UseNavigationOptions) {
     setState((prev) => ({ ...prev, isCollapsed: !prev.isCollapsed }));
   };
 
-  // Keyboard shortcuts for tab switching (Cmd/Ctrl + 1-9)
+  // Keyboard shortcuts for tab switching (Cmd/Ctrl + 1-9) and settings (Cmd/Ctrl + ,)
   useEffect(() => {
     if (!options?.tabs) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
+      // Don't trigger shortcuts when typing in input fields
+      const target = e.target as HTMLElement;
+      if (
+        target.tagName === "INPUT" ||
+        target.tagName === "TEXTAREA" ||
+        target.isContentEditable
+      ) {
+        return;
+      }
+
       // Check for Cmd (Mac) or Ctrl (Windows/Linux) + number key
       if ((e.metaKey || e.ctrlKey) && e.key >= "1" && e.key <= "9") {
         e.preventDefault();
@@ -40,11 +50,20 @@ export function useNavigation(options?: UseNavigationOptions) {
           setActiveTab(options.tabs[index].id);
         }
       }
+
+      // Check for Cmd/Ctrl + , (comma) to open settings
+      if ((e.metaKey || e.ctrlKey) && e.key === ",") {
+        e.preventDefault();
+        const settingsTab = options.tabs.find((tab) => tab.id === "settings");
+        if (settingsTab) {
+          setActiveTab(settingsTab.id);
+        }
+      }
     };
 
     window.addEventListener("keydown", handleKeyDown);
     return () => window.removeEventListener("keydown", handleKeyDown);
-  }, [options?.tabs]);
+  }, [options?.tabs, setActiveTab]);
 
   return {
     activeTab: state.activeTab,

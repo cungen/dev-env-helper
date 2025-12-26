@@ -9,8 +9,11 @@ Users need a curated way to discover and install recommended development softwar
 - **NEW**: App store-like UI with grid layout, categories, emoji icons, and descriptions
 - **NEW**: GitHub release detection and version fetching for software distributed via GitHub
 - **NEW**: Install button integration with existing brew installation system
-- **NEW**: Download button for GitHub releases with version information display
+- **NEW**: "View on GitHub" link in card header for GitHub-sourced software (clickable icon that opens releases page)
+- **NEW**: Installed software detection to mark already-installed software in recommendations
 - **MODIFIED**: Navigation system to include new "Software" tab
+- **MODIFIED** (DEC-26): For GitHub-only software (no Homebrew method), hide download button and only show "View on GitHub" link
+- **MODIFIED** (DEC-26): For software with both Homebrew and GitHub methods, only show Install button (hide GitHub link)
 
 ## Impact
 - **Affected specs**:
@@ -19,7 +22,8 @@ Users need a curated way to discover and install recommended development softwar
 - **Affected code**:
   - `src/App.tsx` - Register new feature tab
   - `src/features/software-recommendations/` - New feature module (components, hooks, types, API)
-  - `src-tauri/src/` - New Rust commands for GitHub API and JSON config loading
+  - `src-tauri/src/` - New Rust commands for GitHub API, JSON config loading, and installation detection
+  - `src-tauri/src/software/detection.rs` - New module for detecting installed software
   - JSON configuration file location (to be determined in design)
 - **New dependencies**:
   - HTTP client for GitHub API (reqwest or similar in Rust)
@@ -29,10 +33,14 @@ Users need a curated way to discover and install recommended development softwar
 1. Users can browse recommended software organized by categories
 2. Each software entry displays emoji icon, name, description, and category
 3. Software with Homebrew support shows install button with method indicator
-4. Software from GitHub releases shows latest version and download button
-5. Installation integrates seamlessly with existing brew installation system
-6. GitHub release fetching works reliably with proper error handling
-7. Configuration is easily editable via JSON file
+4. Software from GitHub releases shows a "View on GitHub" icon link in the card header
+5. GitHub-only software (no Homebrew) does NOT show a download button - only the GitHub link
+6. Software with both Homebrew and GitHub methods only shows the Install button (GitHub link hidden)
+7. Installation integrates seamlessly with existing brew installation system
+8. GitHub release fetching works reliably with proper error handling
+9. Configuration is easily editable via JSON file
+10. Installed software is automatically detected and marked in the UI
+11. Installed software shows appropriate status badge and disabled install button
 
 ## Risks & Mitigations
 - **Risk**: GitHub API rate limiting may affect release fetching

@@ -10,6 +10,7 @@ interface GitHubDownloadButtonProps {
   repo: string;
   assetPattern?: string;
   softwareName: string;
+  onInstallComplete?: () => void;
 }
 
 export function GitHubDownloadButton({
@@ -17,6 +18,7 @@ export function GitHubDownloadButton({
   repo,
   assetPattern,
   softwareName,
+  onInstallComplete,
 }: GitHubDownloadButtonProps) {
   const { release, isLoading: isLoadingRelease, error: releaseError } =
     useGitHubRelease(owner, repo, assetPattern);
@@ -28,6 +30,7 @@ export function GitHubDownloadButton({
   } = useGitHubDownload({
     onSuccess: () => {
       toast.success(`Downloaded ${softwareName} successfully`);
+      onInstallComplete?.();
     },
     onError: (error) => {
       toast.error(`Download failed: ${error}`);
