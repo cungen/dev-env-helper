@@ -1,28 +1,24 @@
 import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { CliToolCard } from "@/features/cli-management/components/CliToolCard";
+import { CliToolDetailDialog } from "@/features/cli-management/components/CliToolDetailDialog";
 import { SoftwareCard } from "@/features/software-recommendations/components/SoftwareCard";
-import { ConfigFileViewer } from "@/features/cli-management/components/ConfigFileViewer";
+import { useCliTemplates } from "@/features/cli-management/hooks/useCliTemplates";
 import { useDependencyAwareInstall } from "@/features/cli-installation/hooks/useDependencyAwareInstall";
 import { useToolInstallation } from "@/features/cli-installation/hooks/useToolInstallation";
 import { toast } from "sonner";
 import type { SearchResult } from "../types/search";
+import type { CliToolDetection } from "@/features/cli-management/types/cli-tool";
 import { DependencyInstallPreview } from "@/features/cli-installation/components/DependencyInstallPreview";
-
-// Template data for dependencies and install methods
-const TOOL_DATA: Record<string, { dependencies?: string[]; installMethods?: any[] }> = {
-  node: { dependencies: [], installMethods: [{ type: "brew", caskName: "node" }] },
-  python: { dependencies: [], installMethods: [{ type: "brew", caskName: "python" }] },
-  uv: { dependencies: ["python"], installMethods: [{ type: "brew", caskName: "uv" }] },
-  n: { dependencies: ["node"], installMethods: [{ type: "brew", caskName: "n" }] },
-};
 
 interface SearchResultsProps {
   results: SearchResult[];
 }
 
 export function SearchResults({ results }: SearchResultsProps) {
-  const [selectedConfigPath, setSelectedConfigPath] = useState<string | null>(null);
+  const { getTemplate } = useCliTemplates();
+  const [selectedTool, setSelectedTool] = useState<CliToolDetection | null>(null);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const dependencyAwareInstall = useDependencyAwareInstall({
     onSuccess: () => {
       toast.success("Installation completed successfully");
@@ -34,15 +30,20 @@ export function SearchResults({ results }: SearchResultsProps) {
     },
   });
 
+  const handleCardClick = (tool: CliToolDetection) => {
+    setSelectedTool(tool);
+    setDialogOpen(true);
+  };
+
   const handleInstall = async (toolId: string) => {
     try {
       const result = await dependencyAwareInstall.prepareInstallation(toolId);
       if (!result.showPreview) {
         // No dependencies, install directly
-        const toolData = TOOL_DATA[toolId];
-        if (toolData?.installMethods) {
+        const template = getTemplate(toolId);
+        if (template?.installMethods && template.installMethods.length > 0) {
           await toolInstallation.installTools([
-            { id: toolId, installMethods: toolData.installMethods },
+            { id: toolId, installMethods: template.installMethods },
           ]);
         }
       }
@@ -54,13 +55,20 @@ export function SearchResults({ results }: SearchResultsProps) {
   const handleConfirmInstall = () => {
     const orderedTools = dependencyAwareInstall.confirmInstallation();
     if (orderedTools) {
-      const toolsToInstall = orderedTools.map((id) => ({
-        id,
-        installMethods: TOOL_DATA[id]?.installMethods || [],
-      }));
+      const toolsToInstall = orderedTools.map((id) => {
+        const template = getTemplate(id);
+        return {
+          id,
+          installMethods: template?.installMethods || [],
+        };
+      });
       toolInstallation.installTools(toolsToInstall);
     }
   };
+
+  // Separate CLI tools and software
+  const cliTools = results.filter((r) => r.type === "cli-tool");
+  const software = results.filter((r) => r.type === "software");
 
   if (results.length === 0) {
     return (
@@ -71,7 +79,7 @@ export function SearchResults({ results }: SearchResultsProps) {
   }
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-6">
       {dependencyAwareInstall.pendingInstallation && (
         <DependencyInstallPreview
           targetTool={dependencyAwareInstall.pendingInstallation.targetTool}
@@ -86,28 +94,49 @@ export function SearchResults({ results }: SearchResultsProps) {
         />
       )}
 
-      {selectedConfigPath && (
-        <div className="mb-4">
-          <ConfigFileViewer path={selectedConfigPath} onClose={() => setSelectedConfigPath(null)} />
+      {/* CLI Tools Grid */}
+      {cliTools.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3">CLI Tools</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {cliTools.map((result) => {
+              const tool = result.data as CliToolDetection;
+              return (
+                <CliToolCard
+                  key={result.id}
+                  tool={tool}
+                  template={getTemplate(tool.templateId)}
+                  onClick={() => handleCardClick(tool)}
+                />
+              );
+            })}
+          </div>
         </div>
       )}
 
-      {results.map((result) => {
-        if (result.type === "cli-tool") {
-          return (
-            <CliToolCard
-              key={result.id}
-              tool={result.data}
-              onViewConfig={setSelectedConfigPath}
-              onInstall={handleInstall}
-              isInstalling={toolInstallation.isInstalling}
-            />
-          );
-        } else if (result.type === "software") {
-          return <SoftwareCard key={result.id} software={result.data} />;
-        }
-        return null;
-      })}
+      {/* Software Grid */}
+      {software.length > 0 && (
+        <div>
+          <h3 className="text-lg font-semibold mb-3">Software</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+            {software.map((result) => (
+              <SoftwareCard key={result.id} software={result.data} />
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Detail Dialog */}
+      {selectedTool && (
+        <CliToolDetailDialog
+          tool={selectedTool}
+          template={getTemplate(selectedTool.templateId)}
+          open={dialogOpen}
+          onOpenChange={setDialogOpen}
+          onInstall={handleInstall}
+          isInstalling={toolInstallation.isInstalling}
+        />
+      )}
     </div>
   );
 }
