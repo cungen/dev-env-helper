@@ -4,13 +4,11 @@ A desktop application for managing development environments across machines. Dev
 
 ## Features
 
-- **CLI Tool Management**: Auto-detection and tracking of installed CLI tools (Node.js, Python, uv, n, and custom tools)
-- **One-Click Installation**: Install missing CLI tools via Homebrew or DMG downloads
-- **Dependency-Aware Installation**: Tools can declare dependencies that are automatically resolved and installed first
-- **Visual Dependency Graph**: See which tools depend on others and preview installation queues
-- **Environment Export/Import**: Export your entire development environment to JSON and restore on a new machine
+- **CLI Tool Management**: Auto-detection and one-click installation of CLI tools via Homebrew, DMG, or website installs
+- **Dependency Management**: Automatic dependency resolution with visual dependency graphs
+- **Software Recommendations**: Discover and install recommended development software with category filtering
+- **Environment Export/Import**: Export your development environment to JSON and restore on any machine
 - **Custom Tool Templates**: Extend support to any CLI tool through a template-based system
-- **Sidebar Navigation**: Clean, extensible navigation for current and future features
 
 ## Tech Stack
 

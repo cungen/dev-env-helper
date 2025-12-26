@@ -1,0 +1,83 @@
+name: Build macOS Release
+
+on:
+  release:
+    types: [created]
+  workflow_dispatch:
+
+jobs:
+  build-macos:
+    runs-on: macos-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 8
+
+      - name: Setup Rust
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin,x86_64-apple-darwin
+
+      - name: Install Rust dependencies
+        run: |
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+
+      - name: Install frontend dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -z "$PREV_TAG" ]; then
+            COMMITS=$(git log --pretty=format:"- %s" HEAD)
+          else
+            COMMITS=$(git log --pretty=format:"- %s" ${PREV_TAG}..HEAD)
+          fi
+
+          # Format commits by type
+          FEAT=$(echo "$COMMITS" | grep -E "^\s*- \[feat\]|^\s*- feat:" || true)
+          FIX=$(echo "$COMMITS" | grep -E "^\s*- \[fix\]|^\s*- fix:" || true)
+          REFACTOR=$(echo "$COMMITS" | grep -E "^\s*- \[refactor\]|^\s*- refactor:" || true)
+          CHORE=$(echo "$COMMITS" | grep -E "^\s*- \[chore\]|^\s*- chore:" || true)
+          DOCS=$(echo "$COMMITS" | grep -E "^\s*- \[docs\]|^\s*- docs:" || true)
+          OTHER=$(echo "$COMMITS" | grep -vE "^\s*- \[(feat|fix|refactor|chore|docs)\]|^\s*- (feat|fix|refactor|chore|docs):" || true)
+
+          NOTES="## What's Changed\n\n"
+          [ -n "$FEAT" ] && NOTES="${NOTES}### ✨ Features\n${FEAT}\n\n"
+          [ -n "$FIX" ] && NOTES="${NOTES}### 🐛 Bug Fixes\n${FIX}\n\n"
+          [ -n "$REFACTOR" ] && NOTES="${NOTES}### ♻️ Refactoring\n${REFACTOR}\n\n"
+          [ -n "$DOCS" ] && NOTES="${NOTES}### 📝 Documentation\n${DOCS}\n\n"
+          [ -n "$CHORE" ] && NOTES="${NOTES}### 🔧 Chores\n${CHORE}\n\n"
+          [ -n "$OTHER" ] && NOTES="${NOTES}### 📦 Other Changes\n${OTHER}\n\n"
+
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          echo -e "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Build Tauri app
+        uses: tauri-apps/tauri-action@v0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          projectPath: .
+          tagName: ${{ github.ref_name }}
+          releaseName: 'DevEnvHelper v${{ github.ref_name }}'
+          releaseBody: ${{ steps.release_notes.outputs.notes }}
+          releaseDraft: true
+          prerelease: false
+          args: '--target universal-apple-darwin'
+
